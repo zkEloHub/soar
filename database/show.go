@@ -116,6 +116,20 @@ func (db *Connector) ShowTables() ([]string, error) {
 	return tables, err
 }
 
+func (db *Connector) GetTableRows(tbName string) (int64, error) {
+	tbStatus, err := db.ShowTableStatus(tbName)
+	if err != nil {
+		common.Log.Error("GetTableRows error %s", err)
+		return 0, err
+	}
+	if len(tbStatus.Rows) == 0 {
+		common.Log.Warn("GetTable Rows == 0")
+		return 0, nil
+	}
+
+	return strconv.ParseInt(string(tbStatus.Rows[0].Rows), 10, 64)
+}
+
 // ShowTableStatus 执行 show table status
 func (db *Connector) ShowTableStatus(tableName string) (*TableStatInfo, error) {
 	// 初始化struct
@@ -153,6 +167,7 @@ func (db *Connector) ShowTableStatus(tableName string) (*TableStatInfo, error) {
 	cols, err := res.Rows.Columns()
 	common.LogIfError(err, "")
 	var colByPass []byte
+	// filter columns.
 	for _, col := range cols {
 		if _, ok := fields[col]; ok {
 			statusFields = append(statusFields, fields[col])
@@ -161,7 +176,7 @@ func (db *Connector) ShowTableStatus(tableName string) (*TableStatInfo, error) {
 			statusFields = append(statusFields, &colByPass)
 		}
 	}
-	// 获取值
+	// get value with column names.
 	for res.Rows.Next() {
 		err := res.Rows.Scan(statusFields...)
 		if err != nil {

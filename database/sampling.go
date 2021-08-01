@@ -26,6 +26,10 @@ import (
 	"github.com/XiaoMi/soar/common"
 )
 
+var (
+	defaultBatchSize int64 = 200
+)
+
 /*--------------------
 * The following choice of minrows is based on the paper
 * "Random sampling for histogram construction: how much is enough?"
@@ -96,6 +100,42 @@ func (db *Connector) SamplingData(onlineConn *Connector, tables ...string) error
 		err = db.startSampling(onlineConn.Conn, onlineConn.Database, table, where)
 	}
 	return err
+}
+
+// SamplingVData Sampling data from true database
+func (db *Connector) SamplingVData(rConn *Connector, tbName string) error {
+	// todo: check the same test & true.
+	// todo: tbName, from TableMap
+
+	rTbRows, err := db.GetTableRows(tbName)
+	if err != nil || rTbRows == 0{
+		common.Log.Warn("[TrueDB] table %s got no data", tbName)
+		return err
+	}
+	vTbRows, err := db.GetTableRows(tbName)
+	if err != nil {
+		return err
+	}
+
+	// 1 default
+	factor := common.Config.SamplingFactor
+	if factor == 0 {
+		factor = 1
+	}
+	expect := int64(float64(rTbRows) * factor)
+	if vTbRows >= expect {
+		common.Log.Warn("[VirtualDB] table %s has no data to sync", tbName)
+		return nil
+	}
+
+	offset := int64(float64(vTbRows) / factor)
+	return db.samplingVData(rConn.Conn, offset, rTbRows, defaultBatchSize, rConn.Database, tbName)
+}
+
+// samplingVData "sync" sampling data from rConn database table.
+// todo: factor change, database change.
+func (db *Connector) samplingVData(rDB *sql.DB, offset, limit, batchSize int64, dbName, tbName string) error {
+	
 }
 
 // startSampling sampling data from OnlineDSN to TestDSN

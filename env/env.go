@@ -38,6 +38,7 @@ type VirtualEnv struct {
 	DBRef   map[string]string // db -> optimizer_xxx
 	Hash2DB map[string]string // optimizer_xxx -> db
 	// 保存 Table 创建关系，防止重复创建表
+	// key: true db's dbname.
 	TableMap map[string]map[string]string
 	// 错误
 	Error error
@@ -236,7 +237,8 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 	// 置空错误信息
 	vEnv.Error = nil
 	// 检测是否已经创建初始数据库，如果未创建则创建一个名称 hash 过的映射数据库
-	err = vEnv.createDatabase(rEnv)
+	//err = vEnv.createDatabase(rEnv)
+	err = vEnv.createVDatabase(rEnv)
 	common.LogIfWarn(err, "")
 
 	// 测试环境检测
@@ -271,7 +273,8 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 				rEnv.Database = stmt.DBName.String()
 
 				// use DB 后检查 DB是否已经创建，如果没有创建则创建DB
-				err = vEnv.createDatabase(rEnv)
+				//err = vEnv.createDatabase(rEnv)
+				err = vEnv.createVDatabase(rEnv)
 				common.LogIfWarn(err, "")
 			}
 			return true
@@ -383,6 +386,34 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 	return true
 }
 
+// createVDatabase create virtual database (conf)
+func (vEnv *VirtualEnv) createVDatabase(rConn *database.Connector) error {
+	dbName := rConn.Database
+	if _, ok := vEnv.DBRef[dbName]; ok {
+		common.Log.Info("Database `%s` has created", vEnv.DBRef[dbName])
+		return nil
+	}
+
+	ddl, err := rConn.ShowCreateDatabase(dbName)
+	if err != nil {
+		common.Log.Error("Show rConn's create database `%s` error %s", dbName, err)
+		return err
+	}
+
+	res, err := vEnv.Query(ddl)
+	if err != nil {
+		common.Log.Error("vEnc create database `%s` error %s", dbName, err)
+		return err
+	}
+	err = res.Rows.Close()
+	common.LogIfWarn(err, "")
+
+	// 创建成功，添加映射记录
+	vEnv.DBRef[dbName] = dbName
+	vEnv.Hash2DB[dbName] = dbName
+	return nil
+}
+
 func (vEnv *VirtualEnv) createDatabase(rEnv *database.Connector) error {
 	// 生成映射关系
 	if _, ok := vEnv.DBRef[rEnv.Database]; ok {
@@ -443,7 +474,8 @@ func (vEnv *VirtualEnv) createTable(rEnv *database.Connector, tbName string) err
 	// 判断数据库是否已经创建
 	if vEnv.DBRef[rEnv.Database] == "" {
 		// 若没创建，则创建数据库
-		err := vEnv.createDatabase(rEnv)
+		//err := vEnv.createDatabase(rEnv)
+		err := vEnv.createVDatabase(rEnv)
 		if err != nil {
 			return err
 		}
@@ -458,6 +490,7 @@ func (vEnv *VirtualEnv) createTable(rEnv *database.Connector, tbName string) err
 		return nil
 	}
 
+	// todo: ? key ?
 	if vEnv.TableMap[rEnv.Database][tbName] != "" {
 		common.Log.Debug("createTable, `%s`.`%s` has created, mapping from `%s`.`%s`", vEnv.DBRef[rEnv.Database], tbName, rEnv.Database, tbName)
 		return nil
@@ -494,6 +527,44 @@ func (vEnv *VirtualEnv) createTable(rEnv *database.Connector, tbName string) err
 	if common.Config.Sampling {
 		common.Log.Debug("createTable, Start Sampling data from %s.%s to %s.%s ...", rEnv.Database, tbName, vEnv.DBRef[rEnv.Database], tbName)
 		err = vEnv.SamplingData(rEnv, tbName)
+	}
+	return err
+}
+
+func (vEnv *VirtualEnv) createVTable(rConn *database.Connector, tbName string) error {
+	var err error
+	if rConn.IsView(tbName) {
+		common.Log.Warn("rConn's table `%s`.`%s` is view", rConn.Database, tbName)
+		return nil
+	}
+	if _, ok := vEnv.DBRef[rConn.Database]; !ok {
+		err = vEnv.createVDatabase(rConn)
+		if err != nil {
+			return err
+		}
+	}
+
+	// create table.
+	dbName := rConn.Database
+	if _, ok := vEnv.TableMap[dbName][tbName]; !ok {
+		ddl, err := rConn.ShowCreateTable(tbName)
+		if err != nil {
+			return err
+		}
+
+		vEnv.Database = vEnv.DBRef[dbName]
+		res, err := vEnv.Query(ddl)
+		if err != nil {
+			return err
+		}
+		err = res.Rows.Close()
+		common.LogIfWarn(err, "")
+	}
+
+	// sync table data from True database
+	if common.Config.Sampling {
+		vEnv.Database = vEnv.DBRef[dbName]
+		err = vEnv.SamplingVData(rConn, tbName)
 	}
 	return err
 }
