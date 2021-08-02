@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/XiaoMi/soar/common"
@@ -28,6 +29,7 @@ import (
 
 var (
 	defaultBatchSize int64 = 200
+	goNum            int   = 10
 )
 
 /*--------------------
@@ -105,10 +107,10 @@ func (db *Connector) SamplingData(onlineConn *Connector, tables ...string) error
 // SamplingVData Sampling data from true database
 func (db *Connector) SamplingVData(rConn *Connector, tbName string) error {
 	// todo: check the same test & true.
-	// todo: tbName, from TableMap
+	// todo: table status: rows
 
-	rTbRows, err := db.GetTableRows(tbName)
-	if err != nil || rTbRows == 0{
+	rTbRows, err := rConn.GetTableRows(tbName)
+	if err != nil || rTbRows == 0 {
 		common.Log.Warn("[TrueDB] table %s got no data", tbName)
 		return err
 	}
@@ -128,14 +130,114 @@ func (db *Connector) SamplingVData(rConn *Connector, tbName string) error {
 		return nil
 	}
 
+	common.Log.Info("vTableRows: %d, rTableRows: %d", vTbRows, rTbRows)
+
 	offset := int64(float64(vTbRows) / factor)
-	return db.samplingVData(rConn.Conn, offset, rTbRows, defaultBatchSize, rConn.Database, tbName)
+	common.Log.Info("Start sampling data, offset: %d, trueDBRows: %d, factor: %f", offset, rTbRows, factor)
+	return db.samplingVData(rConn.Conn, offset, rTbRows, defaultBatchSize, factor, rConn.Database, tbName)
 }
 
 // samplingVData "sync" sampling data from rConn database table.
 // todo: factor change, database change.
-func (db *Connector) samplingVData(rDB *sql.DB, offset, limit, batchSize int64, dbName, tbName string) error {
-	
+// `SELECT * FROM (SELECT * FROM `actor` ORDER BY actor_id LIMIT 0,200) AS tb WHERE RAND() < 0.500000;`
+func (db *Connector) samplingVData(rDB *sql.DB, offset, srcRows, batchSize int64, factor float64, dbName, tbName string) error {
+	pri, err := db.ShowPrimaryKey(dbName, tbName)
+	if err != nil {
+		return err
+	}
+
+	preSql := fmt.Sprintf("SELECT * FROM (SELECT * FROM `%s` ORDER BY %s LIMIT",
+		//Escape(dbName, false),
+		Escape(tbName, false),
+		Escape(pri, false))
+	var limit = batchSize
+	var wg sync.WaitGroup
+	ch := make(chan struct{}, goNum)
+	for offset < srcRows {
+		if (srcRows - offset) <= batchSize {
+			limit = srcRows - offset
+		}
+		querySql := fmt.Sprintf("%s %d,%d) AS tb WHERE RAND() < %f;", preSql, offset, limit, factor)
+		common.Log.Info("[TrueDB] query sql: %s", querySql)
+		ch <- struct{}{}
+		wg.Add(1)
+		go func(qSql string) {
+			defer func() {
+				<- ch
+				wg.Done()
+			}()
+
+			err = db.samplingWithQuerySql(rDB, querySql, tbName)
+			if err != nil {
+				common.Log.Error("samplingWithQuerySql error %s ", err)
+			}
+		}(querySql)
+		offset += limit
+	}
+	wg.Wait()
+	return nil
+}
+
+func (db *Connector)samplingWithQuerySql(rDB *sql.DB, sqlStr, table string) error {
+	res, err := rDB.Query(sqlStr)
+	if err != nil {
+		return err
+	}
+
+	// columns list
+	columns, err := res.Columns()
+	if err != nil {
+		return err
+	}
+	row := make([][]byte, len(columns))
+	tableFields := make([]interface{}, 0)
+	for i := range columns {
+		tableFields = append(tableFields, &row[i])
+	}
+	columnTypes, err := res.ColumnTypes()
+	if err != nil {
+		return err
+	}
+
+	// sampling data
+	var valuesStr []string
+	columnsStr := "`" + strings.Join(columns, "`,`") + "`"
+	for res.Next() {
+		var values []string
+		err = res.Scan(tableFields...)
+		if err != nil {
+			common.Log.Debug(err.Error())
+		}
+		for i, val := range row {
+			if val == nil {
+				values = append(values, "NULL")
+			} else {
+				switch columnTypes[i].DatabaseTypeName() {
+				case "JSON":
+					// https://github.com/XiaoMi/soar/issues/178
+					values = append(values, fmt.Sprintf(`convert(X'%s' using utf8mb4)`, fmt.Sprintf("%x", val)))
+				case "TIMESTAMP", "DATETIME":
+					t, err := time.Parse(time.RFC3339, string(val))
+					if err != nil {
+						values = append(values, fmt.Sprintf(`"%s"`, string(val)))
+					} else {
+						values = append(values, fmt.Sprintf(`"%s"`, TimeString(t)))
+					}
+				default:
+					values = append(values, fmt.Sprintf(`unhex("%s")`, fmt.Sprintf("%x", val)))
+				}
+			}
+		}
+		valuesStr = append(valuesStr, "("+strings.Join(values, `,`)+")")
+	}
+	if len(valuesStr) > 0 {
+		err = db.doSampling(table, columnsStr, strings.Join(valuesStr, `,`))
+		if err != nil {
+			common.LogIfWarn(err, "")
+		}
+	}
+	_ = res.Close()
+	return err
 }
 
 // startSampling sampling data from OnlineDSN to TestDSN

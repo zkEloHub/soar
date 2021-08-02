@@ -1,16 +1,19 @@
 # 线上环境配置
 online-dsn:
-  addr: 127.0.0.1:3306
-  schema: sakila
-  user: root
-  password: zhaokai.139
+  addr: 10.225.149.10:3306
+  schema: srvinfra_bigtree
+  init_schema: 
+  user: srvinfra_bigt_w
+  password: kO89tFdHvrwf2Vk_1qfQdozZDVkfQqaM
+  net: tcp
   disable: false
 # 测试环境配置
 test-dsn:
-  addr: 127.0.0.1:3307
-  schema: test
+  addr: 127.0.0.1:3306
+  schema: bigtree
+  init-schema: initDB
   user: root
-  password: zhaokai.139
+  password: '123456'
   disable: false
 # 是否允许测试环境与线上环境配置相同
 allow-online-as-test: true
@@ -19,10 +22,7 @@ drop-test-temporary: false
 # 语法检查小工具
 only-syntax-check: false
 sampling-statistic-target: 100
-sampling: false
-# 日志级别，[0:Emergency, 1:Alert, 2:Critical, 3:Error, 4:Warning, 5:Notice, 6:Informational, 7:Debug]
-log-level: 6
-log-output: ${your_log_dir}/soar.log
+log-output: /home/zhaokai.k/go/src/github.com/zkElo/soar/log/soar.log
 # 优化建议输出格式
 report-type: html
 ignore-rules:
@@ -57,5 +57,8 @@ query: ""
 list-heuristic-rules: false
 list-test-sqls: false
 verbose: true
-sampling-factor: 0.5
-
+sampling-factor: 0.2
+delimiter: ;
+# 日志级别，[0:Emergency, 1:Alert, 2:Critical, 3:Error, 4:Warning, 5:Notice, 6:Informational, 7:Debug]
+log-level: 6
+sampling: true

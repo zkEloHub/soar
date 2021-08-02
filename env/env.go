@@ -44,24 +44,41 @@ type VirtualEnv struct {
 	Error error
 }
 
+//func (vEnv *VirtualEnv) initVirtualEnv()
+
 // NewVirtualEnv 初始化一个新的测试环境
-func NewVirtualEnv(vEnv *database.Connector) *VirtualEnv {
-	return &VirtualEnv{
+func NewVirtualEnv(vEnv *database.Connector, rDBName string) *VirtualEnv {
+	retVenv := &VirtualEnv{
 		Connector: vEnv,
 		DBRef:     make(map[string]string),
 		Hash2DB:   make(map[string]string),
 		TableMap:  make(map[string]map[string]string),
 	}
+	//retVenv.initVirtualEnv(rDBName)
+	return retVenv
 }
+
+//// initVirtualEnv init table
+//func (vEnv *VirtualEnv) initVirtualEnv(rDBName string) {
+//	tbNames, err := vEnv.ShowTables()
+//	if err != nil {
+//		common.Log.Error("show table error %s", err)
+//		return
+//	}
+//
+//}
+
 
 // BuildEnv 测试环境初始化&连接线上环境检查
 // @output *VirtualEnv	测试环境
 // @output *database.Connector 线上环境连接句柄
 func BuildEnv() (*VirtualEnv, *database.Connector) {
+	//common.Log.Info("TestDSN: %+v", common.Config.TestDSN)
 	connTest, err := database.NewConnector(common.Config.TestDSN)
 	common.LogIfError(err, "")
 	// 生成测试环境
-	vEnv := NewVirtualEnv(connTest)
+	rDBName := common.Config.OnlineDSN.Schema
+	vEnv := NewVirtualEnv(connTest, rDBName)
 
 	// 检查测试环境可用性，并记录数据库版本
 	vEnvVersion, err := vEnv.Version()
@@ -104,6 +121,11 @@ func BuildEnv() (*VirtualEnv, *database.Connector) {
 	if vEnvVersion < rEnvVersion {
 		common.Log.Warning("TestDSN MySQL version older than OnlineDSN(%d), TestDSN(%d) will not be used", rEnvVersion, vEnvVersion)
 		common.Config.TestDSN.Disable = true
+	}
+
+	vEnv.DBRef[connOnline.Database] = vEnv.Database
+	if _, ok := vEnv.TableMap[connOnline.Database]; !ok {
+		vEnv.TableMap[connOnline.Database] = make(map[string]string)
 	}
 
 	return vEnv, connOnline
@@ -228,6 +250,29 @@ func CurrentDB(sql, db string) string {
 	return db
 }
 
+func (vEnv *VirtualEnv) InitTable(rConn *database.Connector) {
+	rTables, err := rConn.ShowTables()
+	if err != nil {
+		common.Log.Error("Show real tables error %s", err)
+		return
+	}
+	rTableMap := make(map[string]struct{}, len(rTables))
+	for _, tb := range rTables {
+		rTableMap[tb] = struct{}{}
+	}
+
+	vTables, err := vEnv.ShowTables()
+	if err != nil {
+		common.Log.Error("Show virtual tables error %s", err)
+		return
+	}
+	for _, tb := range vTables {
+		if _, ok := rTableMap[tb]; ok {
+			vEnv.TableMap[rConn.Database][tb] = tb
+		}
+	}
+}
+
 // BuildVirtualEnv rEnv 为 SQL 源环境，DB 使用的信息从接口获取
 // 注意：如果是 USE, DDL 等语句，执行完第一条就会返回，后面的 SQL 不会执行
 func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string) bool {
@@ -307,7 +352,8 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 			// 拉取表结构
 			table := stmt.Table.Name.String()
 			if table != "" {
-				err = vEnv.createTable(rEnv, table)
+				//err = vEnv.createTable(rEnv, table)
+				err = vEnv.createVTable(rEnv, table)
 				// 这里如果报错可能有两种可能：
 				// 1. SQL 是 Create 语句，线上环境并没有相关的库表结构
 				// 2. 在测试环境中执行 SQL 报错
@@ -375,7 +421,8 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 					}
 				}
 
-				err = vEnv.createTable(rEnv, tb.TableName)
+				//err = vEnv.createTable(rEnv, tb.TableName)
+				err = vEnv.createVTable(rEnv, tb.TableName)
 				if err != nil {
 					common.Log.Error("BuildVirtualEnv %s.%s Error : %v", rEnv.Database, tb.TableName, err)
 					return false
@@ -400,6 +447,9 @@ func (vEnv *VirtualEnv) createVDatabase(rConn *database.Connector) error {
 		return err
 	}
 
+	strings.Replace(ddl, dbName, vEnv.Database, -1)
+	common.Log.Info("vDB: %s, rDB: %s", vEnv.Database, dbName)
+
 	res, err := vEnv.Query(ddl)
 	if err != nil {
 		common.Log.Error("vEnc create database `%s` error %s", dbName, err)
@@ -409,8 +459,8 @@ func (vEnv *VirtualEnv) createVDatabase(rConn *database.Connector) error {
 	common.LogIfWarn(err, "")
 
 	// 创建成功，添加映射记录
-	vEnv.DBRef[dbName] = dbName
-	vEnv.Hash2DB[dbName] = dbName
+	vEnv.DBRef[dbName] = vEnv.Database
+	vEnv.Hash2DB[vEnv.Database] = dbName
 	return nil
 }
 
@@ -474,8 +524,7 @@ func (vEnv *VirtualEnv) createTable(rEnv *database.Connector, tbName string) err
 	// 判断数据库是否已经创建
 	if vEnv.DBRef[rEnv.Database] == "" {
 		// 若没创建，则创建数据库
-		//err := vEnv.createDatabase(rEnv)
-		err := vEnv.createVDatabase(rEnv)
+		err := vEnv.createDatabase(rEnv)
 		if err != nil {
 			return err
 		}

@@ -233,6 +233,7 @@ type Dsn struct {
 	Net              string            `yaml:"net"`                // Network type
 	Addr             string            `yaml:"addr"`               // Network address (requires Net)
 	Schema           string            `yaml:"schema"`             // Database name
+	InitSchema       string            `yaml:"init-schema"`        // init db's dbName
 	Charset          string            `yaml:"charset"`            // SET NAMES charset
 	Collation        string            `yaml:"collation"`          // Connection collation
 	Loc              string            `yaml:"loc"`                // Location for time.Time values
@@ -462,7 +463,13 @@ func FormatDSN(env *Dsn) string {
 	if err != nil {
 		return ""
 	}
-	return dsn.FormatDSN()
+	dsnRet := dsn.FormatDSN()
+
+	if len(env.InitSchema) > 0 {
+		Log.Info("InitSchema: %s", env.InitSchema)
+		strings.Replace(dsnRet, env.Schema, env.InitSchema, 1)
+	}
+	return dsnRet
 }
 
 // SoarVersion soar version information

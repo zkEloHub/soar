@@ -56,6 +56,7 @@ func main() {
 
 	// 环境初始化，连接检查线上环境+构建测试环境
 	vEnv, rEnv := env.BuildEnv()
+	vEnv.InitTable(rEnv)
 
 	// 使用 -cleanup-test-database 命令手动清理残余的 optimizer_xxx 数据库
 	if common.Config.CleanupTestDatabase {

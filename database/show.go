@@ -116,7 +116,10 @@ func (db *Connector) ShowTables() ([]string, error) {
 	return tables, err
 }
 
+// GetTableRows analyze table first. (update rows)
 func (db *Connector) GetTableRows(tbName string) (int64, error) {
+	db.analyzeTable(tbName)
+	common.Log.Info("DBName: %s, tbName: %s", db.Database, tbName)
 	tbStatus, err := db.ShowTableStatus(tbName)
 	if err != nil {
 		common.Log.Error("GetTableRows error %s", err)
@@ -128,6 +131,15 @@ func (db *Connector) GetTableRows(tbName string) (int64, error) {
 	}
 
 	return strconv.ParseInt(string(tbStatus.Rows[0].Rows), 10, 64)
+}
+
+func (db *Connector) analyzeTable(tableName string) {
+	res, err := db.Query(fmt.Sprintf("ANALYZE TABLE %s", tableName))
+	if err != nil {
+		common.Log.Error("ANALYZE TABLE error %s", err)
+		return
+	}
+	_ = res.Rows.Close()
 }
 
 // ShowTableStatus 执行 show table status
@@ -675,4 +687,26 @@ func (db *Connector) ShowReference(dbName string, tbName ...string) ([]Reference
 	}
 	res.Rows.Close()
 	return referenceValues, err
+}
+
+// ShowPrimaryKey return table's primary key
+func (db *Connector) ShowPrimaryKey(dbName string, tbName string) (string ,error) {
+	sql := fmt.Sprintf("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='%s' AND TABLE_SCHEMA='%s' AND COLUMN_KEY='PRI';",
+		Escape(tbName, false),
+		Escape(dbName, false))
+
+	fmt.Println(sql)
+
+	res, err := db.Query(sql)
+	if err != nil {
+		return "", err
+	}
+
+	// get value
+	var retStr string
+	for res.Rows.Next() {
+		err = res.Rows.Scan(&retStr)
+		break
+	}
+	return retStr, err
 }

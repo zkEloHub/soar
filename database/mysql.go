@@ -54,7 +54,13 @@ type QueryResult struct {
 
 // NewConnector 创建新连接
 func NewConnector(dsn *common.Dsn) (*Connector, error) {
+	//dsnStr := common.FormatDSN(dsn)
+	//common.Log.Info("dsn: %s", dsnStr)
 	conn, err := sql.Open("mysql", common.FormatDSN(dsn))
+	if err != nil {
+		return nil, err
+	}
+	err = conn.Ping()
 	if err != nil {
 		return nil, err
 	}
