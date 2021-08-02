@@ -134,18 +134,18 @@ func (db *Connector) SamplingVData(rConn *Connector, tbName string) error {
 
 	offset := int64(float64(vTbRows) / factor)
 	common.Log.Info("Start sampling data, offset: %d, trueDBRows: %d, factor: %f", offset, rTbRows, factor)
-	return db.samplingVData(rConn.Conn, offset, rTbRows, defaultBatchSize, factor, rConn.Database, tbName)
+	pri, err := rConn.ShowPrimaryKey(rConn.Database, tbName)
+	if err != nil {
+		return err
+	}
+	return db.samplingVData(rConn.Conn, offset, rTbRows, defaultBatchSize, factor, tbName, pri)
 }
 
 // samplingVData "sync" sampling data from rConn database table.
 // todo: factor change, database change.
 // `SELECT * FROM (SELECT * FROM `actor` ORDER BY actor_id LIMIT 0,200) AS tb WHERE RAND() < 0.500000;`
-func (db *Connector) samplingVData(rDB *sql.DB, offset, srcRows, batchSize int64, factor float64, dbName, tbName string) error {
-	pri, err := db.ShowPrimaryKey(dbName, tbName)
-	if err != nil {
-		return err
-	}
-
+func (db *Connector) samplingVData(rDB *sql.DB, offset, srcRows, batchSize int64, factor float64, tbName, pri string) error {
+	var err error
 	preSql := fmt.Sprintf("SELECT * FROM (SELECT * FROM `%s` ORDER BY %s LIMIT",
 		//Escape(dbName, false),
 		Escape(tbName, false),

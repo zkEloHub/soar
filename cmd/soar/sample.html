@@ -1,4 +1,4 @@
-2021/08/02 15:46:49.114 [1;34m[I][0m [config.go:469]  InitSchema: initDB
+2021/08/02 15:56:50.548 [1;34m[I][0m [config.go:469]  InitSchema: initDB
 <head>
 <meta http-equiv=Content-Type content="text/html;charset=utf-8">
 <title>SQL优化分析报告</title>
@@ -28,11 +28,93 @@ a:link,a:visited{text-decoration:none}h3,h4{margin-top:2em}h5,h6{margin-top:20px
 </head>
 <body onload=load()>
 
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_kv_data' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 75606C7273BFF0F4</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_kv_data` WHERE `hash_key` = 40854 AND `kv_key` = '1/n/6988082997429796883' LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
 <h1>Query: ECC811267708518C</h1>
 
 <p>★ ★ ★ ★ ☆ 90分</p>
 
-<pre><code class="language-sql">SELECT * FROM `bt_node` WHERE `id` IN (6986944072921382932,6987587575904993299,6987609606251872276,6987642067685998611,6987963868731408403,6987587722051321876,6987609649356734484,6987609737890103315,6988416642191458323,6987610461952802835,6987636299544920084,6988473147573927956,6987309295385706515,6987961287103741971,6988458822851362836,6987963817191800852,6988451778513600531,6987587287986995219,6987587950884159507,6987949601256898580,6988153664544178195,6988468720263757843,6986949486983512083,6987639922928648212,6988148982451011603,6987587337915990035,6987751673548505107,6987753466097565715,6988082997429796883,6988451298118991891,6988457741819838483)
+<pre><code class="language-sql">SELECT * FROM `bt_node` WHERE `id` IN (6987963817191800852,6988451298118991891,6986944072921382932,6987587575904993299,6987609737890103315,6987610461952802835,6988451778513600531,6987309295385706515,6987949601256898580,6988082997429796883,6988153664544178195,6987751673548505107,6987587287986995219,6987587337915990035,6987639922928648212,6988148982451011603,6987587722051321876,6987587950884159507,6987963868731408403,6987636299544920084,6987753466097565715,6988416642191458323,6986949486983512083,6987609606251872276,6987609649356734484,6987642067685998611,6987961287103741971)
 </code></pre>
 
 <h2>Explain信息</h2>
@@ -67,7 +149,7 @@ a:link,a:visited{text-decoration:none}h3,h4{margin-top:2em}h5,h6{margin-top:20px
 <td>PRIMARY</td>
 <td>8</td>
 <td>NULL</td>
-<td>31</td>
+<td>27</td>
 <td>☠️ <strong>100.00%</strong></td>
 <td>O(log n)+</td>
 <td>Using where</td>
@@ -113,5 +195,3772 @@ a:link,a:visited{text-decoration:none}h3,h4{margin-top:2em}h5,h6{margin-top:20px
 <li><p><strong>Severity:</strong>  L1</p></li>
 
 <li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_version_gen' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 4D0958B980A72B1B</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_version_gen` WHERE `tree_id` IN (6988451778907865108,6988422200990629908,6988421471072682004,6988422200277598228,6988451298479702036,6988451408659873811,6987206553581387795,6988421499463925779,6988416180096598036,6988416367061893139,6988416482925346835)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_version_gen</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>PRIMARY</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>IN 要慎用，元素过多会导致全表扫描</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  ARG.005</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>   如：select id from t where num in(1,2,3)对于连续的数值，能用 BETWEEN 就不要用 IN 了：select id from t where num between 1 and 3。而当 IN 值过多时 MySQL 也可能会进入全表扫描导致性能急剧下降。</p></li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_tree_meta' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 490EAB5560A71949</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_tree_meta` WHERE `tree_id` IN (6988422200277598228,6988421471072682004,6988451778907865108,6988416180096598036,6988421499463925779,6987206553581387795,6988422200990629908,6988416482925346835,6988416367061893139,6988451408659873811)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_tree_meta</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>PRIMARY</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_tree_info' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 1C9E13AD385090AF</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_tree_info` WHERE `tree_id` IN (6988422200277598228,6988421471072682004,6988451778907865108,6988416180096598036,6988421499463925779,6987206553581387795,6988422200990629908,6988416482925346835,6988416367061893139,6988451408659873811)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_tree_info</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>PRIMARY</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: 49292CBBD0D1D2C8</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_kv_data` WHERE `hash_key` = 23854 AND `kv_key` LIKE '1/i/%' ORDER BY `kv_key` ASC LIMIT 100
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>NULL</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using index condition; Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><p><strong>Using index condition</strong>: 在5.6版本后加入的新特性（Index Condition Pushdown）。Using index condition 会先条件过滤索引，过滤完索引后找到所有符合索引条件的数据行，随后用 WHERE 子句中的其他条件去过滤这些数据行。</p></li>
+
+<li><p><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</p></li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_node_children' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 99887AA87429B0FD</h1>
+
+<p>★ ★ ★ ★ ☆ 85分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_children` WHERE `parent_id` = 6987206553950486547 ORDER BY `parent_id` ASC,`sort_id` ASC LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>ref</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)</td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>ref</strong>: 连接不能基于关键字选择单个行, 可能查找到多个符合条件的行. 叫做ref是因为索引要跟某个参考值相比较. 这个参考值或者是一个数, 或者是来自一个表里的多表查询的结果值. 例:'SELECT * FROM tbl WHERE idx_col=expr;'.</li>
+</ul>
+
+<h2>ORDER BY 常数列没有任何意义</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  CLA.005</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  SQL 逻辑上可能存在错误; 最多只是一个无用的操作，不会更改查询结果。</p></li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: A84CD31D453C9FEF</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_children` WHERE `parent_id` = -16 AND (`sort_id` &gt; 1073741824) ORDER BY `parent_id` ASC,`sort_id` ASC LIMIT 15
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>NULL</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: F173422DC04A5BD7</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node_children` WHERE `parent_id` = -16 AND (`sort_id` = 1073741824)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>const,<br>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 19ED96DBD9ED4952</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_txn_info` (`txn_id`,`status`,`version_info`,`create_time`,`id`) VALUES ('9LsJ+4PDAYi2lnJdHbf00Q==',1,'','2021-07-24 19:33:50.349',6988403784675770388)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_txn_info</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: 180F9DA8D8CCD929</h1>
+
+<p>★ ★ ★ ★ ☆ 80分</p>
+
+<pre><code class="language-sql">UPDATE `bt_kv_data` SET `txn_id`='9LsJ+4PDAYi2lnJdHbf00Q==',`txn_meta`='&lt;binary&gt;',`txn_value`='1' WHERE `hash_key` = 16798 AND `kv_key` = '1/iv/6986584580472815635/16211407942849658900/16211407952198762515' AND `txn_id` = '' LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>UPDATE/DELETE 操作使用了 LIMIT 条件</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.003</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  UPDATE/DELETE 操作使用 LIMIT 条件和不添加 WHERE 条件一样危险，它可将会导致主从数据不一致或从库同步中断。</p></li>
+</ul>
+
+<h1>Query: DD3022E164DE1753</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node` SET `cas_version`=74,`txn_id`='9LsJ+4PDAYi2lnJdHbf00Q==',`txn_value`='&lt;binary&gt;' WHERE `id` = 6987206553950486547 AND `cas_version` = 73
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.13%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_node_ancestor' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 63B7E8E353DFB726</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node_ancestor` WHERE `id` = 6988035915343986707
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node_ancestor</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 988B4FBCC1ED0564</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_node` (`cas_version`,`txn_id`,`txn_value`,`mv_value`,`lock_info`,`id`) VALUES (0,'9LsJ+4PDAYi2lnJdHbf00Q==','&lt;binary&gt;','&lt;binary&gt;','&lt;binary&gt;',6988035915343986707)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: 9F6B46A648F58FA8</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_node_children` (`parent_id`,`sort_id`,`cas_version`,`txn_id`,`txn_value`,`mv_value`) VALUES (6987206553950486547,-21474836480,0,'9LsJ+4PDAYi2lnJdHbf00Q==','&lt;binary&gt;','&lt;binary&gt;')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: A08C89EFD4A749E8</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_op_log` (`uuid`,`status`,`request`,`response`,`move_info`,`create_time`,`id`) VALUES ('9LsJ+4PDAYi2lnJdHbf00Q==',1,'&lt;binary&gt;','&lt;binary&gt;','&lt;binary&gt;','2021-07-24 19:33:50.349',6988403784675786772)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_op_log</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: 943555095EDD9D90</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT IGNORE INTO `bt_kv_data` (`kv_key`,`hash_key`,`txn_id`,`txn_value`,`txn_meta`,`value`,`version`,`id`) VALUES ('1/iv/6986584580472815635/16211407942849658900/16211407952198762515',16798,'9LsJ+4PDAYi2lnJdHbf00Q==','1','&lt;binary&gt;','',0,6988403784675803156)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: A2104AB60DC2E8EA</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_version_gen` WHERE `tree_id` = 6987206553581387795 LIMIT 1 FOR UPDATE
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
+<h1>Query: E9513C84303E8BA2</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_version_gen` SET `version`=35 WHERE `tree_id` = 6987206553581387795 AND `version` = 34
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_version_gen</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 89C35C86D307FA76</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_tree_log` (`tree_id`,`version`,`uuid`) VALUES (6987206553581387795,35,'9LsJ+4PDAYi2lnJdHbf00Q==')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_tree_log</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: E3EA588B56E7482C</h1>
+
+<p>★ ★ ★ ★ ☆ 80分</p>
+
+<pre><code class="language-sql">UPDATE bt_tree_meta SET pending_txns = concat(pending_txns, '2!35$9LsJ+4PDAYi2lnJdHbf00Q==$0$0,'), add_pending_txns_version = add_pending_txns_version + 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_tree_meta</em></td>
+<td>NULL</td>
+<td>index</td>
+<td>NULL</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>NULL</td>
+<td>☠️ <strong>14930</strong></td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>index</strong>: 全表扫描, 只是扫描表的时候按照索引次序进行而不是行. 主要优点就是避免了排序, 但是开销仍然非常大.</li>
+</ul>
+
+<h2>UPDATE 未指定 WHERE 条件</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  CLA.015</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  UPDATE 不指定 WHERE 条件一般是致命的，请您三思后行</p></li>
+</ul>
+
+<h1>Query: 575DF46C024F87E0</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node` WHERE `id` IN (6988035915343986707)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_txn_info' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: B94EE0705BBECEEC</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">UPDATE `bt_txn_info` SET `status`=2,`version_info`='6987206553581387795@35,' WHERE `id` = 6988403784675770388 AND `txn_id` = '9LsJ+4PDAYi2lnJdHbf00Q==' AND `status` IN (1,2)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_txn_info</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY,<br>uniq_txn_id</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_txn_info表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列txn_id添加索引，散粒度为: 100.00%; 为列status添加索引，散粒度为: 100.00%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_txn_info` add index `idx_txn_id_status` (`txn_id`,`status`) ;</p></li>
+</ul>
+
+<h1>Query: 9CA3DDEAD3C051F2</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE bt_kv_data SET value = txn_value, version = version + 1, txn_id = &quot;&quot;, txn_value = &quot;&quot; WHERE hash_key = 9985 AND kv_key = '1/n/6988035915343986707' AND txn_id = '9LsJ+4PDAYi2lnJdHbf00Q=='
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 98C2579037AD460B</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node` SET `cas_version`=1,`lock_info`='',`mv_value`='&lt;binary&gt;',`txn_id`='',`txn_value`='' WHERE `id` = 6988035915343986707 AND `cas_version` = 0
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.10%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+<h1>Query: 37F5482E30050FFD</h1>
+
+<p>★ ★ ★ ★ ☆ 85分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_node_ancestor` (`ancestor_ids`,`id`) VALUES ('6987206553950486547,6988035915343986707',6988035915343986707) ON DUPLICATE KEY UPDATE `ancestor_ids`=VALUES(`ancestor_ids`)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_node_ancestor</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h2>请慎用 INSERT ON DUPLICATE KEY UPDATE</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  LCK.002</p></li>
+
+<li><p><strong>Severity:</strong>  L3</p></li>
+
+<li><p><strong>Content:</strong>  当主键为自增键时使用 INSERT ON DUPLICATE KEY UPDATE 可能会导致主键出现大量不连续快速增长，导致主键快速溢出无法继续写入。极端情况下还有可能导致主从数据不一致。</p></li>
+</ul>
+
+<h1>Query: 93E2EB2C484878F9</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node_children` SET `cas_version`=1,`mv_value`='&lt;binary&gt;',`txn_id`='',`txn_value`='' WHERE `parent_id` = 6987206553950486547 AND (`sort_id` = -21474836480) AND `cas_version` = 0
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>const,<br>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='bt_op_log' AND TABLE_SCHEMA='srvinfra_bigtree' AND COLUMN_KEY='PRI';
+<h1>Query: 596A9CAFB9CCEC93</h1>
+
+<p>★ ★ ★ ☆ ☆ 60分</p>
+
+<pre><code class="language-sql">UPDATE `bt_op_log` SET `create_time`='2021-07-24 19:33:50.349',`id`=6988403784675786772,`move_info`='&lt;binary&gt;',`request`='&lt;binary&gt;',`response`='&lt;binary&gt;',`status`=2,`uuid`='9LsJ+4PDAYi2lnJdHbf00Q==' WHERE `uuid` = '9LsJ+4PDAYi2lnJdHbf00Q==' AND `status` = 1 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_op_log</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_uuid</td>
+<td>uniq_uuid</td>
+<td>514</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_op_log表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列uuid添加索引，散粒度为: 100.00%; 为列status添加索引，散粒度为: 100.00%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_op_log` add index `idx_uuid_status` (`uuid`,`status`) ;</p></li>
+</ul>
+
+<h2>不要 UPDATE 主键</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  CLA.016</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  主键是数据表中记录的唯一标识符，不建议频繁更新主键列，这将影响元数据统计信息进而影响正常的查询。</p></li>
+</ul>
+
+<h2>UPDATE/DELETE 操作使用了 LIMIT 条件</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.003</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  UPDATE/DELETE 操作使用 LIMIT 条件和不添加 WHERE 条件一样危险，它可将会导致主从数据不一致或从库同步中断。</p></li>
+</ul>
+
+<h1>Query: 10AD3A92FBF07621</h1>
+
+<p>★ ★ ★ ★ ☆ 80分</p>
+
+<pre><code class="language-sql">UPDATE bt_tree_meta SET tree_version = 35, pending_txns = replace(pending_txns,'2!35$9LsJ+4PDAYi2lnJdHbf00Q==$0$0,','')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_tree_meta</em></td>
+<td>NULL</td>
+<td>index</td>
+<td>NULL</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>NULL</td>
+<td>☠️ <strong>14930</strong></td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>index</strong>: 全表扫描, 只是扫描表的时候按照索引次序进行而不是行. 主要优点就是避免了排序, 但是开销仍然非常大.</li>
+</ul>
+
+<h2>UPDATE 未指定 WHERE 条件</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  CLA.015</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  UPDATE 不指定 WHERE 条件一般是致命的，请您三思后行</p></li>
+</ul>
+
+<h1>Query: 16803A28E17A0EDA</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_tree_meta` WHERE `tree_id` = 6987206553581387795 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
+<h1>Query: D2183C91C91446BD</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node` WHERE `id` = 6988035915343986707 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
+<h1>Query: D28668188ABDC875</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_ancestor` WHERE `id` IN (-7)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: 7281E2D84AA2A04A</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node` SET `cas_version`=2,`lock_info`='&lt;binary&gt;' WHERE `id` = 6988035915343986707 AND `cas_version` = 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.10%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+<h1>Query: FA5A41FEA4E419BF</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_children` WHERE `parent_id` = -7 ORDER BY `parent_id` DESC,`sort_id` DESC LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>ref</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)</td>
+<td>Using where; Backward index scan</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>ref</strong>: 连接不能基于关键字选择单个行, 可能查找到多个符合条件的行. 叫做ref是因为索引要跟某个参考值相比较. 这个参考值或者是一个数, 或者是来自一个表里的多表查询的结果值. 例:'SELECT * FROM tbl WHERE idx_col=expr;'.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: 8267D79EDCD3CD28</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_children` WHERE `parent_id` = 6987206553950486547 AND (`sort_id` IN (-21474836480))
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: 110B0D2AD8F4D3FB</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node_children` SET `cas_version`=2,`txn_id`='Y6abANbOr9NimdeyA3PmbQ==',`txn_value`='&lt;binary&gt;' WHERE `parent_id` = 6987206553950486547 AND (`sort_id` = -21474836480) AND `cas_version` = 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>const,<br>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 28B9E7F259ABD7DC</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_kv_data` WHERE `hash_key` = 16798 AND `kv_key` = '1/iv/6986584580472815635/16211407942849658900/16211407952198762515' AND `txn_id` = 'Y6abANbOr9NimdeyA3PmbQ==' LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 4383D2BB20742FB4</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_node_ancestor` WHERE `id` = 6988473147573927956 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
+<h1>Query: 969B6F4FA37E9ABC</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node_children` SET `cas_version`=8,`mv_value`='&lt;binary&gt;',`parent_id`=6988468720263757843,`sort_id`=-1073741824,`txn_id`='',`txn_value`='&lt;binary&gt;' WHERE `parent_id` = 6988468720263757843 AND (`sort_id` = -1073741824) AND `cas_version` = 7
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>const,<br>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 8B8608655BA51C62</h1>
+
+<p>★ ★ ★ ★ ☆ 80分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node` SET `cas_version`=16,`id`=6988471970950021139,`lock_info`='&lt;binary&gt;',`mv_value`='&lt;binary&gt;',`txn_id`='',`txn_value`='&lt;binary&gt;' WHERE `id` = 6988471970950021139 AND `cas_version` = 15
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.11%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+<h2>不要 UPDATE 主键</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  CLA.016</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  主键是数据表中记录的唯一标识符，不建议频繁更新主键列，这将影响元数据统计信息进而影响正常的查询。</p></li>
+</ul>
+
+<h1>Query: F6526B572CAC4FFB</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_tree_info` (`tree_id`,`cas_version`,`txn_id`,`txn_value`,`mv_value`) VALUES (6988515263293423635,0,'6988515268596023316','&lt;binary&gt;','&lt;binary&gt;')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_tree_info</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: 5CAB75FA7CAA18EA</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_version_gen` (`tree_id`,`version`) VALUES (6988515263293423635,1)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_version_gen</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: 9B171A12CCE54621</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_tree_meta` (`tree_id`,`add_pending_txns_version`,`tree_version`,`pending_txns`) VALUES (6988515263293423635,1,0,'2!1$6988515268596023316$6988477413084626963$2,')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_tree_meta</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h1>Query: D36EE0CEC9857891</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_tree_info` SET `cas_version`=1,`mv_value`='&lt;binary&gt;',`txn_id`='',`txn_value`='' WHERE `tree_id` = 6988515263293423635 AND `cas_version` = 0
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_tree_info</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 6ECB913A457E48EF</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_tree_info` SET `cas_version`=2,`txn_id`='6988515335091666964',`txn_value`='&lt;binary&gt;' WHERE `tree_id` = 6988515263293423635 AND `cas_version` = 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_tree_info</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: C38A4B31A9DE61E3</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node_children` WHERE `parent_id` = 6988085836659032083 AND (`sort_id` = -3221225472) AND `cas_version` = 3 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>16</td>
+<td>const,<br>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 43D24D1A20D4D7AC</h1>
+
+<p>★ ★ ★ ★ ☆ 95分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_txn_info` WHERE `txn_id` IN ('6988508913304961044')
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h1>Query: B4FAE24E44AC1704</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_txn_info` WHERE `txn_id` = '6988508913304961044' LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
+</ul>
+
+<h1>Query: 623AA1525D0B9657</h1>
+
+<p>★ ★ ★ ★ ☆ 85分</p>
+
+<pre><code class="language-sql">INSERT INTO `bt_node_ancestor` (`ancestor_ids`,`id`) VALUES ('0,6988473147573927956',6988473147573927956),('0,0,6988473147573927956,6988473372262793236',6988473372262793236) ON DUPLICATE KEY UPDATE `ancestor_ids`=VALUES(`ancestor_ids`)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>INSERT</td>
+<td><em>bt_node_ancestor</em></td>
+<td>NULL</td>
+<td>ALL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>☠️ <strong>O(n)</strong></td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li>☠️ <strong>ALL</strong>: 最坏的情况, 从头到尾全表扫描.</li>
+</ul>
+
+<h2>请慎用 INSERT ON DUPLICATE KEY UPDATE</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  LCK.002</p></li>
+
+<li><p><strong>Severity:</strong>  L3</p></li>
+
+<li><p><strong>Content:</strong>  当主键为自增键时使用 INSERT ON DUPLICATE KEY UPDATE 可能会导致主键出现大量不连续快速增长，导致主键快速溢出无法继续写入。极端情况下还有可能导致主从数据不一致。</p></li>
+</ul>
+
+<h1>Query: 9A2F996A4B5EE48C</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node_children` WHERE `parent_id` = 6987609649356734484 LIMIT 2048
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node_children</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 226BD3C0E014BCFA</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">UPDATE `bt_txn_info` SET `status`=3 WHERE `txn_id` = 'GrlbdEEwnz8PB+t9TmhXOA==' AND `status` IN (1,3)
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_txn_info</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_txn_id</td>
+<td>uniq_txn_id</td>
+<td>514</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h1>Query: 101D3EDD5AC26B55</h1>
+
+<p>★ ★ ★ ★ ☆ 80分</p>
+
+<pre><code class="language-sql">UPDATE `bt_kv_data` SET `txn_id`='',`txn_meta`='',`txn_value`='' WHERE `hash_key` = 2331 AND `kv_key` = '1/nf/6987837280207503380/node_type' AND `txn_id` = 'GrlbdEEwnz8PB+t9TmhXOA==' AND `version` &gt; 0 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>UPDATE/DELETE 操作使用了 LIMIT 条件</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.003</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  UPDATE/DELETE 操作使用 LIMIT 条件和不添加 WHERE 条件一样危险，它可将会导致主从数据不一致或从库同步中断。</p></li>
+</ul>
+
+<h1>Query: CEE85EA62D0ACC1D</h1>
+
+<p>★ ★ ★ ★ ★ 100分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_kv_data` WHERE `hash_key` = 2331 AND `kv_key` = '1/nf/6987837280207503380/ref_id' AND `txn_id` = 'GrlbdEEwnz8PB+t9TmhXOA==' AND `version` = 0 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_kv_data</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>uniq_key,<br>idx_hash_kv</td>
+<td>uniq_key</td>
+<td>1022</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: 58F14C84229ACB09</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">DELETE FROM `bt_node` WHERE `id` = 6987837263254126612 AND `cas_version` = 0 LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>DELETE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.11%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+<h2>使用DELETE/DROP/TRUNCATE等操作时注意备份</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  SEC.003</p></li>
+
+<li><p><strong>Severity:</strong>  L0</p></li>
+
+<li><p><strong>Content:</strong>  在执行高危操作之前对数据进行备份是十分有必要的。</p></li>
+</ul>
+
+<h1>Query: A37C5AC9045074D1</h1>
+
+<p>★ ★ ★ ★ ☆ 90分</p>
+
+<pre><code class="language-sql">UPDATE `bt_node` SET `cas_version`=9,`lock_info`='',`txn_id`='',`txn_value`='' WHERE `id` = 6987949601256898580 AND `cas_version` = 8
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>UPDATE</td>
+<td><em>bt_node</em></td>
+<td>NULL</td>
+<td>range</td>
+<td>PRIMARY</td>
+<td>PRIMARY</td>
+<td>8</td>
+<td>const</td>
+<td>1</td>
+<td>☠️ <strong>100.00%</strong></td>
+<td>O(log n)+</td>
+<td>Using where</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>Type信息解读</h4>
+
+<ul>
+<li><strong>range</strong>: 只检索给定范围的行, 使用一个索引来选择行. key列显示使用了哪个索引. key_len包含所使用索引的最长关键元素.</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>Using where</strong>: WHERE条件用于筛选出与下一个表匹配的数据然后返回给客户端. 除非故意做的全表扫描, 否则连接类型是ALL或者是index, 且在Extra列的值中没有Using Where, 则该查询可能是有问题的.</li>
+</ul>
+
+<h2>为bigtree库的bt_node表添加索引</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  IDX.001</p></li>
+
+<li><p><strong>Severity:</strong>  L2</p></li>
+
+<li><p><strong>Content:</strong>  为列cas_version添加索引，散粒度为: 0.11%;</p></li>
+
+<li><p><strong>Case:</strong> ALTER TABLE `bigtree`.`bt_node` add index `idx_cas_version` (`cas_version`) ;</p></li>
+</ul>
+
+<h1>Query: 7C3BBA679F5FA32D</h1>
+
+<p>★ ★ ★ ☆ ☆ 75分</p>
+
+<pre><code class="language-sql">SELECT * FROM `bt_op_log` WHERE `uuid` = 'GrlbdEEwnz8PB+t9TmhXOA==' LIMIT 1
+</code></pre>
+
+<h2>Explain信息</h2>
+
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>select_type</th>
+<th>table</th>
+<th>partitions</th>
+<th>type</th>
+<th>possible_keys</th>
+<th>key</th>
+<th>key_len</th>
+<th>ref</th>
+<th>rows</th>
+<th>filtered</th>
+<th>scalability</th>
+<th>Extra</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>SIMPLE</td>
+<td><em>NULL</em></td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>NULL</td>
+<td>0</td>
+<td>0.00%</td>
+<td>NULL</td>
+<td>no matching row in const table</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Explain信息解读</h3>
+
+<h4>SelectType信息解读</h4>
+
+<ul>
+<li><strong>SIMPLE</strong>: 简单SELECT(不使用UNION或子查询等).</li>
+</ul>
+
+<h4>Extra信息解读</h4>
+
+<ul>
+<li><strong>no matching row in const table</strong>: 对于连接查询, 列未满足唯一索引的条件或表为空.</li>
+</ul>
+
+<h2>不建议使用 SELECT * 类型查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  COL.001</p></li>
+
+<li><p><strong>Severity:</strong>  L1</p></li>
+
+<li><p><strong>Content:</strong>  当表结构变更时，使用 * 通配符选择所有列将导致查询的含义和行为会发生更改，可能导致查询返回更多的数据。</p></li>
+</ul>
+
+<h2>未使用 ORDER BY 的 LIMIT 查询</h2>
+
+<ul>
+<li><p><strong>Item:</strong>  RES.002</p></li>
+
+<li><p><strong>Severity:</strong>  L4</p></li>
+
+<li><p><strong>Content:</strong>  没有 ORDER BY 的 LIMIT 会导致非确定性的结果，这取决于查询执行计划。</p></li>
 </ul>
 

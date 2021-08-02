@@ -280,7 +280,7 @@ func FindEQColsInWhere(node sqlparser.SQLNode) []*common.Column {
 		switch node := node.(type) {
 		// 对AST中所有节点进行扫描
 		case *sqlparser.Subquery, *sqlparser.JoinTableExpr, *sqlparser.BinaryExpr, *sqlparser.OrExpr:
-			// 忽略子查询，join condition，数值计算，or condition
+			// 忽略子查询，join condition，数值计算，OR
 			return false, nil
 
 		case *sqlparser.ComparisonExpr:

@@ -893,7 +893,6 @@ func CompleteColumnsInfo(stmt sqlparser.Statement, cols []*common.Column, env *e
 				}
 			}
 		}
-
 	}
 
 	// 如果不依赖env环境，将可能存在的列也加入到索引预处理列表中

@@ -708,5 +708,6 @@ func (db *Connector) ShowPrimaryKey(dbName string, tbName string) (string ,error
 		err = res.Rows.Scan(&retStr)
 		break
 	}
+	_ = res.Rows.Close()
 	return retStr, err
 }

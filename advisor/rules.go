@@ -1220,7 +1220,7 @@ func InitHeuristicRules() {
 // IsIgnoreRule 判断是否是过滤规则
 // 支持XXX*前缀匹配，OK规则不可设置过滤
 func IsIgnoreRule(item string) bool {
-
+	// todo: zk, ignore rules.
 	for _, ir := range common.Config.IgnoreRules {
 		ir = strings.Trim(ir, "*")
 		if strings.HasPrefix(item, ir) && ir != "OK" && ir != "" {

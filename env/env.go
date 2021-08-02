@@ -424,7 +424,7 @@ func (vEnv *VirtualEnv) BuildVirtualEnv(rEnv *database.Connector, SQLs ...string
 				//err = vEnv.createTable(rEnv, tb.TableName)
 				err = vEnv.createVTable(rEnv, tb.TableName)
 				if err != nil {
-					common.Log.Error("BuildVirtualEnv %s.%s Error : %v", rEnv.Database, tb.TableName, err)
+					common.Log.Error("BuildVirtualEnv %s.%s Error : %v", vEnv.Database, tb.TableName, err)
 					return false
 				}
 			}
@@ -608,6 +608,7 @@ func (vEnv *VirtualEnv) createVTable(rConn *database.Connector, tbName string) e
 		}
 		err = res.Rows.Close()
 		common.LogIfWarn(err, "")
+		vEnv.TableMap[dbName][tbName] = tbName
 	}
 
 	// sync table data from True database

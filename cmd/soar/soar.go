@@ -44,7 +44,7 @@ func main() {
 	alterTableTimes := make(map[string]int)                   // 待评审的 SQL 中同一经表 ALTER 请求计数器
 	suggestMerged := make(map[string]map[string]advisor.Rule) // 优化建议去重, key 为 sql 的 fingerprint.ID
 	var suggestStr []string                                   // string 形式格式化之后的优化建议，用于 -report-type json
-	tables := make(map[string][]string)                       // SQL 使用的库表名
+	tables := make(map[string][]string)                       // SQL 使用的库表名, key: sqlID
 
 	// 配置文件&命令行参数解析
 	initConfig()
@@ -110,7 +110,7 @@ func main() {
 		mysqlSuggest := make(map[string]advisor.Rule)     // MySQL 返回的 ERROR 信息
 
 		if buf == "" {
-			common.Log.Debug("Ending, buf: '%s', sql: '%s'", buf, sql)
+			common.Log.Info("Ending, buf: '%s', sql: '%s'", buf, sql)
 			break
 		}
 		// 查询请求切分
@@ -132,7 +132,7 @@ func main() {
 		// 去除无用的备注和空格
 		sql = database.RemoveSQLComments(sql)
 		if sql == "" {
-			common.Log.Debug("empty query or comment, buf: %s", buf)
+			common.Log.Warn("empty query or comment, buf: %s", buf)
 			continue
 		}
 		common.Log.Debug("main loop SQL: %s", sql)
@@ -141,6 +141,7 @@ func main() {
 		fingerprint := strings.TrimSpace(query.Fingerprint(sql))
 		// SQL 签名
 		id = query.Id(fingerprint)
+		// check use stmt.
 		currentDB = env.CurrentDB(sql, currentDB)
 		switch common.Config.ReportType {
 		case "fingerprint":
@@ -201,11 +202,9 @@ func main() {
 
 		// +++++++++++++++++++++语法检查[开始]+++++++++++++++++++++++{
 		q, syntaxErr := advisor.NewQuery4Audit(sql)
-		stmt := q.Stmt
-
 		// 如果语法检查出错则不需要给优化建议
 		if syntaxErr != nil {
-			errContent := fmt.Sprintf("At SQL %d : %v", sqlCounter, syntaxErr)
+			errContent := fmt.Sprintf("SQL: %s, At : %d, Error: %v", sql, sqlCounter, syntaxErr)
 			common.Log.Warning(errContent)
 			if common.Config.OnlySyntaxCheck || common.Config.ReportType == "rewrite" ||
 				common.Config.ReportType == "query-type" {
@@ -215,6 +214,8 @@ func main() {
 			// tidb parser 语法检查给出的建议 ERR.000
 			mysqlSuggest["ERR.000"] = advisor.RuleMySQLError("ERR.000", syntaxErr)
 		}
+		stmt := q.Stmt
+
 		// 如果只想检查语法直接跳过后面的步骤
 		if common.Config.OnlySyntaxCheck {
 			continue
@@ -250,13 +251,14 @@ func main() {
 		// 在配置文件 ignore-rules 中添加 'IDX.*' 即可屏蔽索引优化建议
 		common.Log.Debug("start of index advisor Query: %s", q.Query)
 		if !advisor.IsIgnoreRule("IDX.") {
+			// init env with sql.
 			if vEnv.BuildVirtualEnv(rEnv, q.Query) {
 				idxAdvisor, err := advisor.NewAdvisor(vEnv, *rEnv, *q)
 				if err != nil || (idxAdvisor == nil && vEnv.Error == nil) {
 					if idxAdvisor == nil {
 						// 如果 SQL 是 DDL 语句，则返回的 idxAdvisor 为 nil，可以忽略不处理
 						// TODO alter table add index 语句检查索引是否已经存在
-						common.Log.Debug("idxAdvisor by pass Query: %s", q.Query)
+						common.Log.Info("idxAdvisor by pass Query: %s", q.Query)
 					} else {
 						common.Log.Warning("advisor.NewAdvisor Error: %v", err)
 					}
